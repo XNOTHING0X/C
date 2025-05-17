@@ -1,0 +1,136 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Cleaner</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #00ff88;
+            text-shadow: 0 0 10px #00ff88;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        textarea {
+            width: 90%;
+            max-width: 800px;
+            height: 250px;
+            background: #2a2a2a;
+            color: #00ff88;
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 16px;
+            resize: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+        }
+        textarea:focus {
+            outline: none;
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.6);
+            border-color: #00ccff;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            background: #2a2a2a;
+            color: #00ff88;
+            border: 2px solid #00ff88;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: #00ff88;
+            color: #1a1a1a;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+        }
+        #output {
+            width: 90%;
+            max-width: 800px;
+            background: #2a2a2a;
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            padding: 15px;
+            white-space: pre-wrap;
+            font-size: 16px;
+            color: #00ff88;
+            min-height: 200px;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+            animation: fadeIn 1s ease-in;
+        }
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #00ff88; }
+            to { text-shadow: 0 0 20px #00ff88, 0 0 30px #00ccff; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <h1>Code Cleaner 😈</h1>
+    <textarea id="inputCode" placeholder="Paste your code here..."></textarea>
+    <button onclick="cleanCode()">Clean Code</button>
+    <div id="output"></div>
+    <button onclick="copyCode()" style="margin-top: 10px;">Copy Cleaned Code</button>
+    <script>
+        function detectLanguage(code) {
+            if (code.includes('public class') || code.includes('Console.Write') || code.includes('namespace')) return 'csharp';
+            if (code.includes('function') || code.includes('let') || code.includes('const')) return 'javascript';
+            if (code.includes('def ') || code.includes('print(')) return 'python';
+            if (code.includes('#include') || code.includes('int main(')) return 'cpp';
+            if (code.includes('SELECT ') || code.includes('FROM ')) return 'sql';
+            if (code.includes('local ') || code.includes('function ') || code.includes('--')) return 'lua';
+            if (code.includes('public class') || code.includes('System.out')) return 'java';
+            if (code.includes('def ') || code.includes('puts ')) return 'ruby';
+            if (code.includes('<?php') || code.includes('$')) return 'php';
+            if (code.includes('<html') || code.includes('<div')) return 'html';
+            return 'unknown';
+        }
+        function cleanCode() {
+            const input = document.getElementById('inputCode').value;
+            const lang = detectLanguage(input);
+            let cleaned = input;
+            if (lang === 'javascript' || lang === 'cpp' || lang === 'java' || lang === 'csharp' || lang === 'php') {
+                cleaned = cleaned.replace(/^(?!.*https?:\/\/.*$).*\/\/.*$/gm, '')
+            } else if (lang === 'python' || lang === 'ruby') {
+                cleaned = cleaned.replace(/#.*$/gm, '');
+            } else if (lang === 'sql') {
+                cleaned = cleaned.replace(/--.*$/gm, '')
+            } else if (lang === 'lua') {
+                cleaned = cleaned.replace(/--.*$/gm, '')
+                                .replace(/--\[\[[\s\S]*?\]\]/g, '');
+            } else if (lang === 'html') {
+                cleaned = cleaned.replace(/<!--[\s\S]*?-->/g, '');
+            } else {
+                cleaned = cleaned
+                    .replace(/^(?!.*https?:\/\/.*$).*\/\/.*$/gm, '')
+                    .replace(/#.*$/gm, '')
+                    .replace(/--.*$/gm, '')
+                    .replace(/--\[\[[\s\S]*?\]\]/g, '')
+                    .replace(/<!--[\s\S]*?-->/g, '');
+            }
+            cleaned = cleaned.split('\n').filter(line => line.trim() !== '').join('\n').trim();
+            document.getElementById('output').textContent = cleaned;
+        }
+        function copyCode() {
+            const output = document.getElementById('output').textContent;
+            navigator.clipboard.writeText(output).then(() => {
+                alert('Code copied to clipboard!');
+            });
+        }
+    </script>
+</body>
+</html>

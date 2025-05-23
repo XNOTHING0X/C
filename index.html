@@ -2,7 +2,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Code Cleaner</title>
+    <title>Roblox Lua Code Cleaner</title>
     <style>
         body {
             font-family: 'Courier New', monospace;
@@ -80,23 +80,15 @@
     </style>
 </head>
 <body>
-    <h1>Code Cleaner 😈</h1>
-    <textarea id="inputCode" placeholder="Paste your code here..."></textarea>
+    <h1>Roblox Lua Code Cleaner 😈</h1>
+    <textarea id="inputCode" placeholder="Paste your Roblox Lua code here..."></textarea>
     <button onclick="cleanCode()">Clean Code</button>
     <div id="output"></div>
     <button onclick="copyCode()" style="margin-top: 10px;">Copy Cleaned Code</button>
     <script>
         function detectLanguage(code) {
-            if (code.includes('public class') || code.includes('Console.Write') || code.includes('namespace')) return 'csharp';
-            if (code.includes('function') || code.includes('let') || code.includes('const')) return 'javascript';
-            if (code.includes('def ') || code.includes('print(')) return 'python';
-            if (code.includes('#include') || code.includes('int main(')) return 'cpp';
-            if (code.includes('SELECT ') || code.includes('FROM ')) return 'sql';
-            if (code.includes('local ') || code.includes('function ') || code.includes('--')) return 'lua';
-            if (code.includes('public class') || code.includes('System.out')) return 'java';
-            if (code.includes('def ') || code.includes('puts ')) return 'ruby';
-            if (code.includes('<?php') || code.includes('$')) return 'php';
-            if (code.includes('< atlet html') || code.includes('<div')) return 'html';
+            if (code.includes('local ') || code.includes('function ') || code.includes('--') || 
+                code.includes('game.') || code.includes('script.') || code.includes('workspace.')) return 'lua';
             return 'unknown';
         }
         function cleanCode() {
@@ -106,12 +98,6 @@
             if (lang === 'lua') {
                 cleaned = cleaned.replace(/--.*$/gm, '')
                                .replace(/--\[\[[\s\S]*?\]\]/g, '');
-            } else {
-                cleaned = cleaned.replace(/^(?!.*https?:\/\/.*$).*\/\/.*$/gm, '')
-                               .replace(/#.*$/gm, '')
-                               .replace(/--.*$/gm, '')
-                               .replace(/--\[\[[\s\S]*?\]\]/g, '')
-                               .replace(/<!--[\s\S]*?-->/g, '');
             }
             cleaned = cleaned.split('\n').filter(line => line.trim() !== '').join('\n').trim();
             document.getElementById('output').textContent = cleaned;

@@ -96,40 +96,29 @@
             if (code.includes('public class') || code.includes('System.out')) return 'java';
             if (code.includes('def ') || code.includes('puts ')) return 'ruby';
             if (code.includes('<?php') || code.includes('$')) return 'php';
-            if (code.includes('<html') || code.includes('<div')) return 'html';
+            if (code.includes('< atlet html') || code.includes('<div')) return 'html';
             return 'unknown';
         }
         function cleanCode() {
             const input = document.getElementById('inputCode').value;
             const lang = detectLanguage(input);
             let cleaned = input;
-            if (lang === 'javascript' || lang === 'cpp' || lang === 'java' || lang === 'csharp' || lang === 'php') {
-                cleaned = cleaned.replace(/^(?!.*https?:\/\/.*$).*\/\/.*$/gm, '')
-            } else if (lang === 'python' || lang === 'ruby') {
-                cleaned = cleaned.replace(/#.*$/gm, '');
-            } else if (lang === 'sql') {
+            if (lang === 'lua') {
                 cleaned = cleaned.replace(/--.*$/gm, '')
-            } else if (lang === 'lua') {
-                cleaned = cleaned.replace(/--.*$/gm, '')
-                                .replace(/--\[\[[\s\S]*?\]\]/g, '');
-            } else if (lang === 'html') {
-                cleaned = cleaned.replace(/<!--[\s\S]*?-->/g, '');
+                               .replace(/--\[\[[\s\S]*?\]\]/g, '');
             } else {
-                cleaned = cleaned
-                    .replace(/^(?!.*https?:\/\/.*$).*\/\/.*$/gm, '')
-                    .replace(/#.*$/gm, '')
-                    .replace(/--.*$/gm, '')
-                    .replace(/--\[\[[\s\S]*?\]\]/g, '')
-                    .replace(/<!--[\s\S]*?-->/g, '');
+                cleaned = cleaned.replace(/^(?!.*https?:\/\/.*$).*\/\/.*$/gm, '')
+                               .replace(/#.*$/gm, '')
+                               .replace(/--.*$/gm, '')
+                               .replace(/--\[\[[\s\S]*?\]\]/g, '')
+                               .replace(/<!--[\s\S]*?-->/g, '');
             }
             cleaned = cleaned.split('\n').filter(line => line.trim() !== '').join('\n').trim();
             document.getElementById('output').textContent = cleaned;
         }
         function copyCode() {
             const output = document.getElementById('output').textContent;
-            navigator.clipboard.writeText(output).then(() => {
-                alert('Code copied to clipboard!');
-            });
+            navigator.clipboard.writeText(output);
         }
     </script>
 </body>

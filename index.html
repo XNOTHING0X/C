@@ -1,8 +1,9 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roblox Lua Code Cleaner</title>
+    <title>Code Cleaner (Lua & JavaScript)</title>
     <style>
         body {
             font-family: 'Courier New', monospace;
@@ -10,19 +11,79 @@
             padding: 20px;
             background: #1a1a1a;
             color: #e0e0e0;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
         }
         h1 {
             color: #00ff88;
             text-shadow: 0 0 10px #00ff88;
             animation: glow 2s ease-in-out infinite alternate;
+            margin-bottom: 20px;
         }
-        textarea {
+        .tab-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            padding: 10px 20px;
+            background: #2a2a2a;
+            color: #00ff88;
+            border: 2px solid #00ff88;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .tab-button:hover {
+            background: #00ff88;
+            color: #1a1a1a;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+            transform: scale(1.05);
+        }
+        .tab-button.active {
+            background: #00ff88;
+            color: #1a1a1a;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+        }
+        .section {
             width: 90%;
             max-width: 800px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            animation: slideIn 0.5s ease-in;
+        }
+        .section.active {
+            display: flex;
+        }
+        .checkboxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #00ff88;
+            font-size: 14px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        .checkbox-label:hover {
+            color: #00ccff;
+        }
+        input[type="checkbox"] {
+            accent-color: #00ff88;
+            cursor: pointer;
+        }
+        textarea {
+            width: 100%;
             height: 250px;
             background: #2a2a2a;
             color: #00ff88;
@@ -40,7 +101,6 @@
             border-color: #00ccff;
         }
         button {
-            margin: 10px;
             padding: 10px 20px;
             background: #2a2a2a;
             color: #00ff88;
@@ -54,11 +114,12 @@
             background: #00ff88;
             color: #1a1a1a;
             box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+            transform: scale(1.05);
         }
-        #output {
-            width: 90%;
-            max-width: 800px;
+        .output {
+            width: 100%;
             background: #2a2a2a;
+            border: 2a2a2a;
             border: 2px solid #00ff88;
             border-radius: 10px;
             padding: 15px;
@@ -77,34 +138,126 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
     </style>
 </head>
 <body>
-    <h1>Roblox Lua Code Cleaner 😈</h1>
-    <textarea id="inputCode" placeholder="Paste your Roblox Lua code here..."></textarea>
-    <button onclick="cleanCode()">Clean Code</button>
-    <div id="output"></div>
-    <button onclick="copyCode()" style="margin-top: 10px;">Copy Cleaned Code</button>
+    <h1>Code Cleaner (Lua & JavaScript) 😈</h1>
+    <div class="tab-container">
+        <button class="tab-button active" onclick="showSection('js')">JavaScript</button>
+        <span style="color: #00ff88; font-size: 20px;">-</span>
+        <button class="tab-button" onclick="showSection('lua')">Lua</button>
+    </div>
+    <div id="jsSection" class="section active">
+        <h2 style="color: #00ccff;">JavaScript Code</h2>
+        <div class="checkboxes">
+            <label class="checkbox-label"><input type="checkbox" id="jsEmptyLines" checked> Remove Empty Lines</label>
+            <label class="checkbox-label"><input type="checkbox" id="jsComments" checked> Remove Comments</label>
+            <label class="checkbox-label"><input type="checkbox" id="jsConsole"> Remove console.log/writeline</label>
+            <label class="checkbox-label"><input type="checkbox" id="jsMessageBox"> Remove messagebox.show</label>
+        </div>
+        <textarea id="jsInput" placeholder="Paste your JavaScript code here..."></textarea>
+        <button onclick="cleanJsCode()">Clean JavaScript Code</button>
+        <div class="output" id="jsOutput"></div>
+        <button onclick="copyJsCode()">Copy Cleaned JavaScript Code</button>
+    </div>
+    <div id="luaSection" class="section">
+        <h2 style="color: #00ccff;">Lua Code</h2>
+        <div class="checkboxes">
+            <label class="checkbox-label"><input type="checkbox" id="luaEmptyLines" checked> Remove Empty Lines</label>
+            <label class="checkbox-label"><input type="checkbox" id="luaComments" checked> Remove Comments</label>
+            <label class="checkbox-label"><input type="checkbox" id="luaPrint"> Remove print/writeline</label>
+        </div>
+        <textarea id="luaInput" placeholder="Paste your Roblox Lua code here..."></textarea>
+        <button onclick="cleanLuaCode()">Clean Lua Code</button>
+        <div class="output" id="luaOutput"></div>
+        <button onclick="copyLuaCode()">Copy Cleaned Lua Code</button>
+    </div>
     <script>
-        function detectLanguage(code) {
-            if (code.includes('local ') || code.includes('function ') || code.includes('--') || 
-                code.includes('game.') || code.includes('script.') || code.includes('workspace.')) return 'lua';
+        function showSection(lang) {
+            document.getElementById('luaSection').classList.remove('active');
+            document.getElementById('jsSection').classList.remove('active');
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(`${lang}Section`).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function detectLanguage(code, isLuaSection) {
+            if (isLuaSection) {
+                if (code.includes('local ') || code.includes('function ') || code.includes('--') || 
+                    code.includes('game.') || code.includes('script.') || code.includes('workspace.')) {
+                    return 'lua';
+                }
+            } else {
+                if (code.includes('function ') || code.includes('//') || code.includes('/*') || 
+                    code.includes('console.') || code.includes('var ') || code.includes('let ')) {
+                    return 'javascript';
+                }
+            }
             return 'unknown';
         }
-        function cleanCode() {
-            const input = document.getElementById('inputCode').value;
-            const lang = detectLanguage(input);
+
+        function cleanLuaCode() {
+            const input = document.getElementById('luaInput').value;
+            const removeEmpty = document.getElementById('luaEmptyLines').checked;
+            const removeComments = document.getElementById('luaComments').checked;
+            const removePrint = document.getElementById('luaPrint').checked;
             let cleaned = input;
-            if (lang === 'lua') {
-                cleaned = cleaned.replace(/--.*$/gm, '')
-                               .replace(/--\[\[[\s\S]*?\]\]/g, '');
+
+            if (detectLanguage(input, true) === 'lua') {
+                if (removeComments) {
+                    cleaned = cleaned.replace(/--.*$/gm, '').replace(/--\[\[[\s\S]*?\]\]/g, '');
+                }
+                if (removePrint) {
+                    cleaned = cleaned.replace(/print\s*\(.*?\)/g, '').replace(/game:WriteLine\s*\(.*?\)/g, '');
+                }
+                if (removeEmpty) {
+                    cleaned = cleaned.split('\n').filter(line => line.trim() !== '').join('\n').trim();
+                }
             }
-            cleaned = cleaned.split('\n').filter(line => line.trim() !== '').join('\n').trim();
-            document.getElementById('output').textContent = cleaned;
+            document.getElementById('luaOutput').textContent = cleaned || 'No Lua code to clean.';
         }
-        function copyCode() {
-            const output = document.getElementById('output').textContent;
+
+        function cleanJsCode() {
+            const input = document.getElementById('jsInput').value;
+            const removeEmpty = document.getElementById('jsEmptyLines').checked;
+            const removeComments = document.getElementById('jsComments').checked;
+            const removeConsole = document.getElementById('jsConsole').checked;
+            const removeMessageBox = document.getElementById('jsMessageBox').checked;
+            let cleaned = input;
+
+            if (detectLanguage(input, false) === 'javascript') {
+                if (removeComments) {
+                    cleaned = cleaned.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+                }
+                if (removeConsole) {
+                    cleaned = cleaned.replace(/console\.(log|info|warn|error|debug)\s*\(.*?\);?/g, '');
+                    cleaned = cleaned.replace(/writeline\s*\(.*?\);?/gi, '');
+                }
+                if (removeMessageBox) {
+                    cleaned = cleaned.replace(/messagebox\.show\s*\(.*?\);?/gi, '');
+                }
+                if (removeEmpty) {
+                    cleaned = cleaned.split('\n').filter(line => line.trim() !== '').join('\n').trim();
+                }
+            }
+            document.getElementById('jsOutput').textContent = cleaned || 'No JavaScript code to clean.';
+        }
+
+        function copyLuaCode() {
+            const output = document.getElementById('luaOutput').textContent;
             navigator.clipboard.writeText(output);
+            alert('Lua code copied to clipboard!');
+        }
+
+        function copyJsCode() {
+            const output = document.getElementById('jsOutput').textContent;
+            navigator.clipboard.writeText(output);
+            alert('JavaScript code copied to clipboard!');
         }
     </script>
 </body>

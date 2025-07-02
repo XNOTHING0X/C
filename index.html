@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -160,21 +159,28 @@
       setTimeout(() => popup.classList.remove("show"), 3000);
     }
 
-    function getRandomKey() {
-      return apiKeys[Math.floor(Math.random() * apiKeys.length)];
+    function getRandomKey(usedKeys) {
+      const availableKeys = apiKeys.filter(key => !usedKeys.includes(key));
+      if (availableKeys.length === 0) return null;
+      return availableKeys[Math.floor(Math.random() * availableKeys.length)];
     }
 
-    async function sendToAI() {
+    async function sendToAI(usedKeys = [], retries = 0) {
       const rawScript = document.getElementById("scriptInput").value.trim();
       if (!rawScript) {
         showPopup("Input is empty", "#f90");
         return;
       }
 
+      const key = getRandomKey(usedKeys);
+      if (!key) {
+        showPopup("No valid API keys available", "#f00");
+        return;
+      }
+
       showPopup("Cleaning via AI...", "#09f");
 
       try {
-        const key = getRandomKey();
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -195,11 +201,35 @@
           })
         });
 
+        if (response.status === 429) {
+          showPopup("Error: Too Many Requests", "#f90");
+          if (retries < apiKeys.length - 1) {
+            setTimeout(() => sendToAI([...usedKeys, key], retries + 1), 500);
+            return;
+          } else {
+            showPopup("All API keys exceeded rate limit", "#f00");
+            return;
+          }
+        } else if (response.status === 401) {
+          showPopup("Error: Unauthorized", "#f90");
+          if (retries < apiKeys.length - 1) {
+            setTimeout(() => sendToAI([...usedKeys, key], retries + 1), 500);
+            return;
+          } else {
+            showPopup("All API keys are unauthorized", "#f00");
+            return;
+          }
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP error ${response.status}`);
+        }
+
         const data = await response.json();
         let cleaned = data.choices?.[0]?.message?.content?.trim();
 
         if (cleaned?.startsWith("```")) {
-            cleaned = cleaned.replace(/^```[a-z]*\n?/i, "").replace(/```$/, "").trim();
+          cleaned = cleaned.replace(/^```[a-z]*\n?/i, "").replace(/```$/, "").trim();
         }
 
         if (!cleaned || cleaned?.startsWith("Error")) {
@@ -214,7 +244,7 @@
         output.style.display = "block";
         showPopup("Cleaned by AI!");
       } catch (err) {
-        showPopup("Failed to contact AI", "#f00");
+        showPopup(`Failed to contact AI: ${err.message}`, "#f00");
       }
     }
 

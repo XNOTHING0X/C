@@ -1,263 +1,258 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI Script Cleaner</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-  <script src="https://unpkg.com/feather-icons"></script>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: radial-gradient(circle, #000 0%, #111 100%);
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem;
-    }
-
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
-      animation: fadeInDown 1s ease-out;
-    }
-
-    textarea {
-      width: 90%;
-      max-width: 800px;
-      height: 200px;
-      background: #222;
-      color: white;
-      border: 1px solid #444;
-      border-radius: 10px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      resize: vertical;
-      transition: 0.3s ease;
-      font-family: monospace;
-    }
-
-    textarea:focus {
-      outline: none;
-      border-color: #09f;
-      box-shadow: 0 0 10px #09f8;
-    }
-
-    button {
-      padding: 0.8rem 1.5rem;
-      font-size: 1rem;
-      background-color: #09f;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      margin: 0.5rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      transition: background 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #06c;
-    }
-
-    #cleanedOutput {
-      white-space: pre;
-      width: 90%;
-      max-width: 800px;
-      background: #111;
-      border: 1px solid #333;
-      border-radius: 10px;
-      padding: 1rem;
-      margin-top: 1rem;
-      font-family: monospace;
-      color: #eee;
-      overflow-x: auto;
-      display: none;
-    }
-
-    .popup {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #0f0;
-      color: black;
-      padding: 0.8rem 1.5rem;
-      border-radius: 8px;
-      font-weight: bold;
-      opacity: 0;
-      transition: opacity 0.5s ease-in-out;
-      z-index: 1000;
-    }
-
-    .popup.show {
-      opacity: 1;
-    }
-
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: #222;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: #444;
-      border-radius: 4px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: #666;
-    }
-
-    @keyframes fadeInDown {
-      from {
-        opacity: 0;
-        transform: translateY(-30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs/loader.min.js"></script>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            animation: fadeInBody 1s ease-in-out;
+        }
+        #monaco-editor {
+            width: 90%;
+            max-width: 800px;
+            height: 250px;
+            border: 2px solid #ff0000;
+            border-radius: 8px;
+            transition: all 0.5s ease-in-out;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5), 0 0 40px rgba(255, 0, 0, 0.2);
+            overflow: hidden;
+            animation: pulseEditor 2s infinite alternate;
+        }
+        #monaco-editor:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.7), 0 0 60px rgba(255, 0, 0, 0.3);
+        }
+        button {
+            margin: 15px;
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #ff0000, #b30000);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: 0.5s;
+        }
+        button:hover::before {
+            left: 100%;
+        }
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 0, 0, 0.6);
+        }
+        button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 5px rgba(255, 0, 0, 0.4);
+        }
+        @keyframes fadeInBody {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulseEditor {
+            from { box-shadow: 0 0 20px rgba(255, 0, 0, 0.5), 0 0 40px rgba(255, 0, 0, 0.2); }
+            to { box-shadow: 0 0 30px rgba(255, 0, 0, 0.7), 0 0 60px rgba(255, 0, 0, 0.3); }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .button-container {
+            display: flex;
+            gap: 15px;
+            animation: slideIn 0.8s ease-in-out;
+        }
+    </style>
 </head>
 <body>
-  <h1>AI Script Cleaner</h1>
-  <textarea id="scriptInput" placeholder="Paste your HTML, JS, Lua script here..."></textarea>
-  <div>
-    <button onclick="sendToAI()"><i data-feather="zap"></i> Clean via AI</button>
-    <button onclick="copyCleaned()"><i data-feather="copy"></i> Copy Cleaned</button>
-  </div>
-  <pre><code id="cleanedOutput" class="hljs"></code></pre>
-
-  <div class="popup" id="popupMsg"></div>
-
-  <script>
-    feather.replace();
-    let lastCleaned = "";
-
-    const apiKeys = [
-"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",
-"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",
-"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",
-"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",
-"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"
-    ];
-
-    function showPopup(message, color = "#0f0") {
-      const popup = document.getElementById("popupMsg");
-      popup.textContent = message;
-      popup.style.background = color;
-      popup.classList.add("show");
-      setTimeout(() => popup.classList.remove("show"), 3000);
-    }
-
-    function getRandomKey(usedKeys) {
-      const availableKeys = apiKeys.filter(key => !usedKeys.includes(key));
-      if (availableKeys.length === 0) return null;
-      return availableKeys[Math.floor(Math.random() * availableKeys.length)];
-    }
-
-    async function sendToAI(usedKeys = [], retries = 0) {
-      const rawScript = document.getElementById("scriptInput").value.trim();
-      if (!rawScript) {
-        showPopup("Input is empty", "#f90");
-        return;
-      }
-
-      const key = getRandomKey(usedKeys);
-      if (!key) {
-        showPopup("No valid API keys available", "#f00");
-        return;
-      }
-
-      showPopup("Cleaning via AI...", "#09f");
-
-      try {
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${key}`,
-            "HTTP-Referer": "https://c-coral-mu.vercel.app/",
-            "X-Title": "AI Script Cleaner",
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            model: "google/gemini-2.0-flash-exp:free",
-            messages: [{
-              role: "user",
-              content: [{
-                type: "text",
-                text: `Clean this script: remove all comments, logs, unnecessary code, errors and fix structure. Return only cleaned code:\n\n${rawScript}`
-              }]
-            }]
-          })
-        });
-
-        if (response.status === 429) {
-          showPopup("Error: Too Many Requests", "#f90");
-          if (retries < apiKeys.length - 1) {
-            setTimeout(() => sendToAI([...usedKeys, key], retries + 1), 500);
-            return;
-          } else {
-            showPopup("All API keys exceeded rate limit", "#f00");
-            return;
-          }
-        } else if (response.status === 401) {
-          showPopup("Error: Unauthorized", "#f90");
-          if (retries < apiKeys.length - 1) {
-            setTimeout(() => sendToAI([...usedKeys, key], retries + 1), 500);
-            return;
-          } else {
-            showPopup("All API keys are unauthorized", "#f00");
-            return;
-          }
+    <div id="monaco-editor"></div>
+    <div class="button-container">
+        <button onclick="cleanCode()">Clean Code</button>
+        <button onclick="clearInputOutput()">Clear All</button>
+        <button onclick="copyCode()">Copy Cleaned Code</button>
+    </div>
+    <script>
+        let editor;
+        function initializeMonacoEditor() {
+            try {
+                if (typeof require === 'undefined') {
+                    throw new Error('Require.js not loaded');
+                }
+                document.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                });
+                require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs' } });
+                require(['vs/editor/editor.main'], function () {
+                    try {
+                        monaco.languages.setMonarchTokensProvider('lua', {
+                            defaultToken: '',
+                            tokenPostfix: '.lua',
+                            keywords: [
+                                'and', 'break', 'do', 'else', 'elseif', 'end', 'false', 'for', 'function', 'if',
+                                'in', 'local', 'nil', 'not', 'or', 'repeat', 'return', 'then', 'true', 'until', 'while'
+                            ],
+                            robloxGlobals: [
+                                '_G', '_VERSION', 'Enum', 'game', 'plugin', 'shared', 'script', 'workspace',
+                                'DebuggerManager', 'elapsedTime', 'LoadLibrary', 'PluginManager', 'settings',
+                                'tick', 'time', 'typeof', 'UserSettings', 'HumanoidRootPart'
+                            ],
+                            robloxClasses: [
+                                'Drawing', 'debug', 'Instance', 'Color3', 'Vector3', 'Vector2', 'BrickColor',
+                                'math', 'table', 'string', 'coroutine', 'Humanoid', 'ClickDetector', 'LocalScript',
+                                'Model', 'ModuleScript', 'Mouse', 'Part', 'Script', 'Tool', 'RunService',
+                                'UserInputService', 'Workspace', 'ReplicatedFirst', 'SoundService', 'Character',
+                                'CoreGui', 'ReplicatedStorage', 'Lighting', 'Players', 'PlayerGui', 'PlayerScript',
+                                'LocalPlayer', 'Parent'
+                            ],
+                            utilityFunctions: [
+                                'print', 'warn', 'info', 'printidentity', 'assert', 'collectgarbage',
+                                'error', 'getfenv', 'getmetatable', 'setmetatable', 'ipairs', 'loadfile',
+                                'loadstring', 'newproxy', 'next', 'pairs', 'pcall', 'spawn', 'rawequal',
+                                'rawget', 'rawset', 'select', 'tonumber', 'tostring', 'type', 'unpack', 'xpcall',
+                                'delay', 'stats'
+                            ],
+                            tokenizer: {
+                                root: [
+                                    [/\b(_G|_VERSION|Enum|game|plugin|shared|script|workspace|DebuggerManager|elapsedTime|LoadLibrary|PluginManager|settings|tick|time|typeof|UserSettings|HumanoidRootPart)\b/, 'roblox-global'],
+                                    [/\b(and|break|do|else|elseif|end|false|for|function|if|in|local|nil|not|or|repeat|return|then|true|until|while)\b/, 'keyword'],
+                                    [/\bmath\.(abs|acos|asin|atan|atan2|ceil|cos|cosh|deg|exp|floor|fmod|frexp|huge|ldexp|log|max|min|modf|pi|pow|rad|random|randomseed|sin|sinh|sqrt|tan|tanh)\b/, 'math-function'],
+                                    [/\btable\.(concat|foreach|foreachi|sort|insert|remove)\b/, 'table-function'],
+                                    [/\b(Color3|Instance|BrickColor|Vector3|Vector2)\.new\b/, 'roblox-constructor'],
+                                    [/\bdebug\.getinfo\b/, 'debug-function'],
+                                    [/\bstring\.(byte|char|dump|find|format|gmatch|gsub|len|lower|match|rep|reverse|sub|upper)\b/, 'string-function'],
+                                    [/\bcoroutine\.(create|resume|running|status|wrap|yield)\b/, 'coroutine-function'],
+                                    [/\b(Drawing|debug|Instance|Color3|Vector3|Vector2|BrickColor|math|table|string|coroutine|Humanoid|ClickDetector|LocalScript|Model|ModuleScript|Mouse|Part|Script|Tool|RunService|UserInputService|Workspace|ReplicatedFirst|SoundService|Character|CoreGui|ReplicatedStorage|Lighting|Players|PlayerGui|PlayerScript|LocalPlayer|Parent)\b/, 'roblox-class'],
+                                    [/\b(print|warn|info|printidentity|assert|collectgarbage|error|getfenv|getmetatable|setmetatable|ipairs|loadfile|loadstring|newproxy|next|pairs|pcall|spawn|rawequal|rawget|rawset|select|tonumber|tostring|type|unpack|xpcall|delay|stats)\b/, 'utility-function'],
+                                    [/(?<=:)(Remove|BreakJoints|GetChildren|FindFirstChild|FireServer|InvokeServer|ClearAllChildren|Clone|Destroy|FindFirstAncestor|FindFirstAncestorOfClass|FindFirstAncestorWhichIsA|FindFirstChildOfClass|FindFirstChildWhichIsA|GetDebugId|GetDescendants|GetFullName|IsA|GetPropertyChangedSignal|IsAncestorOf|IsDescendantOf|WaitForChild|Connect|AncestryChanged|Changed|ChildAdded|ChildRemoved|DescendantAdded|DescendantRemoving|GetService|GetObjects|HttpGet|Wait)\b/, 'roblox-method'],
+                                    [/\b(HttpGet|HttpGetAsync|HttpPostAsync)\b/, 'http-function'],
+                                    [/\b(Visible|Color|Transparency|Thickness|From|To|Text|Size|Center|Outline|OutlineColor|Position|TextBounds|Font|Data|Rounding|NumSides|Radius|Filled|PointA|PointB|PointC|PointD)\b/, 'roblox-property'],
+                                    [/"[^"]*"/, 'string'],
+                                    [/'[^']*'/, 'string'],
+                                    [/\d+/, 'number'],
+                                    [/--.*$/, 'comment'],
+                                    [/[+\-*\/%^#=<>~]/, 'operator'],
+                                    [/[;,:.(){}]/, 'delimiter']
+                                ]
+                            }
+                        });
+                        monaco.editor.defineTheme('custom-theme', {
+                            base: 'vs-dark',
+                            inherit: true,
+                            rules: [
+                                { token: 'keyword', foreground: 'ff0000', fontStyle: 'bold' },
+                                { token: 'string', foreground: 'ff5555' },
+                                { token: 'number', foreground: 'ffaa00' },
+                                { token: 'comment', foreground: '808080', fontStyle: 'italic' },
+                                { token: 'operator', foreground: 'ff4444' },
+                                { token: 'delimiter', foreground: 'ffffff' },
+                                { token: 'roblox-global', foreground: 'ff0000' },
+                                { token: 'math-function', foreground: 'ff5555' },
+                                { token: 'table-function', foreground: 'ff5555' },
+                                { token: 'roblox-constructor', foreground: 'ffaa00' },
+                                { token: 'debug-function', foreground: 'ffaa00' },
+                                { token: 'string-function', foreground: 'ff5555' },
+                                { token: 'coroutine-function', foreground: 'ff5555' },
+                                { token: 'roblox-class', foreground: 'ff0000' },
+                                { token: 'utility-function', foreground: 'ffaa00' },
+                                { token: 'roblox-method', foreground: 'ff0000' },
+                                { token: 'http-function', foreground: 'ff4444' },
+                                { token: 'roblox-property', foreground: 'ff5555' },
+                                { token: 'identifier', foreground: 'ffffff' },
+                                { token: 'function', foreground: 'ff5555' },
+                                { token: 'constant', foreground: 'ffaa00' },
+                                { token: 'tag', foreground: 'ff0000' },
+                                { token: 'variable', foreground: 'ffffff' },
+                                { token: 'metatable', foreground: 'ffaa00' },
+                                { token: 'luau-type', foreground: 'ff4444' },
+                                { token: 'luau-annotation', foreground: 'ff4444' },
+                                { token: 'roblox-event', foreground: 'ffaa00' },
+                                { token: 'roblox-enum', foreground: 'ffaa00' },
+                                { token: 'roblox-service', foreground: 'ff0000' }
+                            ],
+                            colors: {
+                                'editor.background': '#000000',
+                                'minimap.background': '#000000',
+                                'editor.foreground': '#ffffff',
+                                'editor.lineHighlightBackground': '#220000',
+                                'editor.lineNumbers': '#a0a0a0',
+                                'editor.selectionBackground': '#440000',
+                                'editorCursor.foreground': '#ff0000',
+                                'editorGutter.background': '#000000',
+                                'editorSuggestWidget.background': '#220000',
+                                'editorSuggestWidget.foreground': '#ffffff',
+                                'editorSuggestWidget.selectedBackground': '#440000',
+                                'editorHoverWidget.background': '#220000',
+                                'editorHoverWidget.foreground': '#ffffff',
+                                'editorError.foreground': '#ff0000',
+                                'editorWarning.foreground': '#ffaa00',
+                                'editorIndentGuide.background': '#333333',
+                                'editorIndentGuide.activeBackground': '#555555'
+                            }
+                        });
+                        editor = monaco.editor.create(document.getElementById('monaco-editor'), {
+                            value: '',
+                            language: 'lua',
+                            theme: 'custom-theme',
+                            minimap: { enabled: false },
+                            automaticLayout: true,
+                            fontSize: 13,
+                            contextmenu: false,
+                            scrollBeyondLastLine: false,
+                            renderLineHighlight: 'all',
+                            cursorBlinking: 'smooth',
+                            cursorSmoothCaretAnimation: true
+                        });
+                        editor.getDomNode().style.animation = 'fadeIn 1s ease-in-out';
+                    } catch (e) {
+                        console.error('Monaco Editor initialization failed:', e);
+                    }
+                });
+            } catch (e) {
+                console.error('Require.js not loaded:', e);
+            }
         }
-
-        if (!response.ok) {
-          throw new Error(`HTTP error ${response.status}`);
+        initializeMonacoEditor();
+        function cleanCode() {
+            let cleaned = editor.getValue();
+            cleaned = cleaned.replace(/--.*$/gm, '');
+            cleaned = cleaned.split('\n').filter(line => line.trim() !== '').join('\n').trim();
+            editor.setValue(cleaned);
+            editor.getDomNode().style.animation = 'pulseEditor 0.5s';
+            setTimeout(() => editor.getDomNode().style.animation = 'pulseEditor 2s infinite alternate', 500);
         }
-
-        const data = await response.json();
-        let cleaned = data.choices?.[0]?.message?.content?.trim();
-
-        if (cleaned?.startsWith("```")) {
-          cleaned = cleaned.replace(/^```[a-z]*\n?/i, "").replace(/```$/, "").trim();
+        function copyCode() {
+            const output = editor.getValue();
+            navigator.clipboard.writeText(output);
         }
-
-        if (!cleaned || cleaned?.startsWith("Error")) {
-          showPopup("No cleaned code received", "#f00");
-          document.getElementById("cleanedOutput").style.display = "none";
-          return;
+        function clearInputOutput() {
+            editor.setValue('');
+            editor.getDomNode().style.animation = 'pulseEditor 0.5s';
+            setTimeout(() => editor.getDomNode().style.animation = 'pulseEditor 2s infinite alternate', 500);
         }
-
-        lastCleaned = cleaned;
-        const output = document.getElementById("cleanedOutput");
-        output.innerHTML = hljs.highlightAuto(cleaned).value;
-        output.style.display = "block";
-        showPopup("Cleaned by AI!");
-      } catch (err) {
-        showPopup(`Failed to contact AI: ${err.message}`, "#f00");
-      }
-    }
-
-    function copyCleaned() {
-      if (!lastCleaned) {
-        showPopup("Nothing to copy!", "#f90");
-        return;
-      }
-
-      navigator.clipboard.writeText(lastCleaned)
-        .then(() => showPopup("Copied!"))
-        .catch(() => showPopup("Copy failed", "#f00"));
-    }
-  </script>
+    </script>
 </body>
 </html>
